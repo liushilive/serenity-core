@@ -3,13 +3,14 @@ package net.serenitybdd.core.webdriver.servicepools;
 import net.serenitybdd.core.environment.ConfiguredEnvironment;
 import net.thucydides.core.util.EnvironmentVariables;
 import org.openqa.selenium.os.ExecutableFinder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class DriverServiceExecutable {
 
@@ -19,8 +20,6 @@ public class DriverServiceExecutable {
     private final String downloadUrl;
     private final EnvironmentVariables environmentVariables;
     private final boolean reportMissingBinary;
-
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public DriverServiceExecutable(String exeName,
                                    String exeProperty,
@@ -87,29 +86,46 @@ public class DriverServiceExecutable {
 
     public File asAFile() {
 
+        Path binaryPath = asAPath();
+
+        if (reportMissingBinary) {
+            checkForMissingBinaries(binaryPath);
+        }
+        return binaryPath != null ? binaryPath.toFile() : null;
+    }
+
+    public Path asAPath() {
+
         String pathOnFilesystem = new ExecutableFinder().find(exeName);
         Optional<String> defaultPath = Optional.ofNullable(pathOnFilesystem);
 
-        Optional<String> configuredBinaryPath = Optional.ofNullable(environmentVariables.getProperty(exeProperty));
-        String exePath = configuredBinaryPath.orElse(defaultPath.orElse(null));
+        Optional<String> osSpecificPath = Optional.ofNullable(nullIfEmpty(environmentVariables.getProperty(osSpecific(exeProperty))));
 
-        File executableLocation = (exePath != null) ? new File(exePath) : null;
+        Optional<String> configuredBinaryPath = Optional.ofNullable(nullIfEmpty((environmentVariables.getProperty(exeProperty))));
 
-        if (reportMissingBinary) {
-            checkForMissingBinaries(executableLocation);
-        }
-        return executableLocation;
+        String exePath = configuredBinaryPath.orElse(osSpecificPath.orElse(defaultPath.orElse(null)));
+
+        return (exePath == null) ? null : Paths.get(exePath);
     }
 
-    private void checkForMissingBinaries(File executableLocation) {
+    private String nullIfEmpty(String value) {
+        return isEmpty(value) ? null : value;
+    }
+
+    private String osSpecific(String exeProperty) {
+        return "drivers." + CurrentOS.getType() + "." + exeProperty;
+    }
+
+    private void checkForMissingBinaries(Path binaryPath) {
         String documentationSource = Optional.ofNullable(documentationUrl).orElse(downloadUrl);
 
-        checkState(executableLocation != null,
+        checkState(binaryPath != null,
                 "The path to the %s driver executable must be set by the %s system property;"
                         + " for more information, see %s. "
                         + "The latest version can be downloaded from %s",
                 exeName, exeProperty, documentationSource, downloadUrl);
-        checkExecutable(executableLocation);
+
+        checkExecutable(binaryPath.toFile());
     }
 
     protected static void checkExecutable(File exe) {

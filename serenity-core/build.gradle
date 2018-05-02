@@ -32,18 +32,20 @@ test {
 dependencies {
 
     compile project(':serenity-report-resources')
+    compile project(':serenity-model')
+    compile project(':serenity-reports')
 
     compile "com.google.code.gson:gson:${gsonVersion}"
 
     compile "commons-codec:commons-codec:${commonsCodecVersion}"
     compile "commons-io:commons-io:${commonsIoVersion}"
 
-    compile("com.opera:operadriver:${operaDriverVersion}") {
-        exclude group: 'org.seleniumhq.selenium', module: 'selenium-java'
-        exclude group: 'org.seleniumhq.selenium', module: 'selenium-remote-driver'
-        exclude group: 'com.google.guava', module: 'guava'
-        exclude group: 'org.apache.commons', module: 'commons-exec'
-    }
+//    compile("com.opera:operadriver:${operaDriverVersion}") {
+//        exclude group: 'org.seleniumhq.selenium', module: 'selenium-java'
+//        exclude group: 'org.seleniumhq.selenium', module: 'selenium-remote-driver'
+//        exclude group: 'com.google.guava', module: 'guava'
+//        exclude group: 'org.apache.commons', module: 'commons-exec'
+//    }
 
     compile("org.seleniumhq.selenium:selenium-server:$seleniumVersion") {
         exclude group: 'cglib', module: 'cglib-nodep'
@@ -60,6 +62,8 @@ dependencies {
         exclude group: "org.eclipse.jetty", module:"jetty-util"
         exclude group: "org.eclipse.jetty", module:"jetty-io"
         exclude group: "commons-codec", module:"commons-codec"
+        exclude group: "org.seleniumhq.selenium", module:"htmlunit-driver"
+        exclude group: "net.sourceforge.htmlunit", module:"neko-htmlunit"
 
     }
 
@@ -69,9 +73,10 @@ dependencies {
     compile("org.seleniumhq.selenium:selenium-edge-driver:$seleniumVersion")
     compile("org.seleniumhq.selenium:selenium-remote-driver:$seleniumVersion")
     compile("org.seleniumhq.selenium:selenium-safari-driver:$seleniumVersion")
+    compile("org.seleniumhq.selenium:selenium-opera-driver:$seleniumVersion")
     compile("org.seleniumhq.selenium:selenium-support:$seleniumVersion")
 
-    compile("com.paulhammant:ngwebdriver:1.0")
+    compile("com.paulhammant:ngwebdriver:${ngwebdriver}")
 
     compile("com.codeborne:phantomjsdriver:${phantomjsDriverVersion}") {
         exclude group: 'xml-apis', module: 'xml-apis'
@@ -93,7 +98,7 @@ dependencies {
         exclude group: 'org.seleniumhq.selenium', module: 'selenium-support'
         exclude group: 'commons-codec', module: 'commons-codec'
         exclude group: 'commons-text', module: 'commons-text'
-        exclude group: 'org.apache.httpcomponents', module: 'httpmimet'
+//        exclude group: 'org.apache.httpcomponents', module: 'httpmimet'
 //        exclude group: 'net.sourceforge.htmlunit', module: 'htmlunit'
     }
 
@@ -126,16 +131,16 @@ dependencies {
     }
     compile "org.hamcrest:hamcrest-core:${hamcrestVersion}"
     compile "org.hamcrest:hamcrest-library:${hamcrestVersion}"
-    compile("net.sourceforge.htmlunit:htmlunit:${htmlunitVersion}") {
-        exclude group: 'org.apache.commons', module: 'commons-lang3'
-        exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'commons-io', module: 'commons-io'
-        exclude group: 'xml-apis', module: 'xml-apis'
-        exclude group: 'xalan', module: 'xalan'
-        exclude group: 'commons-codec', module: 'commons-codec'
-        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-        exclude group: 'org.apache.httpcomponents', module: 'httpmime'
-    }
+//    compile("net.sourceforge.htmlunit:htmlunit:${htmlunitVersion}") {
+//        exclude group: 'org.apache.commons', module: 'commons-lang3'
+//        exclude group: 'commons-logging', module: 'commons-logging'
+//        exclude group: 'commons-io', module: 'commons-io'
+//        exclude group: 'xml-apis', module: 'xml-apis'
+//        exclude group: 'xalan', module: 'xalan'
+//        exclude group: 'commons-codec', module: 'commons-codec'
+//        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+//        exclude group: 'org.apache.httpcomponents', module: 'httpmime'
+//    }
     compile("org.apache.httpcomponents:httpclient:${httpclientVersion}") {
         exclude group: 'commons-codec', module: 'commons-codec'
     }
@@ -148,7 +153,8 @@ dependencies {
         exclude group: 'junit', module: 'junit-dep'
     }
     compile "com.jhlabs:filters:${jhlabfiltersVersion}"
-    compile("org.asciidoctor:asciidoctor-java-integration:${asciidocVersion}") {
+
+    compile("org.asciidoctor:asciidoctorj:${asciidoctorVersion}"){
         exclude group: 'com.beust', module: 'jcommander'
     }
 
@@ -195,6 +201,8 @@ dependencies {
 
     testCompile project(':serenity-sample-alternative-resources')
     testCompile project(':serenity-test-utils')
+    testCompile project(':serenity-model')
+    testCompile project(':serenity-reports')
     testCompile "org.skyscreamer:jsonassert:${jsonassertVersion}"
     testCompile("org.jbehave:jbehave:${jbehaveVersion}") {
         exclude module: 'freemarker'

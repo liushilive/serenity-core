@@ -6,9 +6,10 @@ import net.serenitybdd.core.annotations.findby.By;
 import net.serenitybdd.core.annotations.findby.FindBy;
 import net.serenitybdd.core.annotations.findby.How;
 import net.serenitybdd.core.annotations.findby.di.CustomFindByAnnotationProviderService;
-import net.thucydides.core.guice.Injectors;
+import net.serenitybdd.core.di.WebDriverInjectors;
 import net.thucydides.core.webdriver.MobilePlatform;
-import org.openqa.selenium.support.*;
+import org.openqa.selenium.support.ByIdOrName;
+import org.openqa.selenium.support.FindBys;
 import org.openqa.selenium.support.pagefactory.Annotations;
 import org.openqa.selenium.support.pagefactory.ByChained;
 
@@ -22,7 +23,6 @@ import java.util.*;
 import static io.appium.java_client.remote.MobilePlatform.ANDROID;
 import static io.appium.java_client.remote.MobilePlatform.IOS;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 
 public class SmartAnnotations extends Annotations {
@@ -151,7 +151,7 @@ public class SmartAnnotations extends Annotations {
     }
 
     public SmartAnnotations(Field field, MobilePlatform platform) {
-        this(field, platform, Injectors.getInjector().getInstance(CustomFindByAnnotationProviderService.class));
+        this(field, platform, WebDriverInjectors.getInjector().getInstance(CustomFindByAnnotationProviderService.class));
     }
 
     public SmartAnnotations(Field field, MobilePlatform platform,
@@ -430,11 +430,10 @@ public class SmartAnnotations extends Annotations {
 
     private static String getFieldValue(Annotation mobileBy) {
         Method[] values = prepareAnnotationMethods(mobileBy.getClass());
-
         for (Method value : values) {
             try {
                 String strategyParameter = value.invoke(mobileBy).toString();
-                if (isNotEmpty(strategyParameter) && !isNumeric(strategyParameter)) {
+                if (isNotEmpty(strategyParameter) && isStrategyName(value.getName())) {
                     return value.getName();
                 }
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -444,6 +443,10 @@ public class SmartAnnotations extends Annotations {
         throw new IllegalArgumentException("@"
                 + mobileBy.getClass().getSimpleName() + ": one of "
                 + Arrays.toString(Strategies.strategyNames()) + " should be filled");
+    }
+
+    private static boolean isStrategyName(String potentialStrategyName) {
+        return Arrays.asList(Strategies.strategyNames()).contains(potentialStrategyName);
     }
 
     private static Method[] prepareAnnotationMethods(

@@ -1,6 +1,7 @@
 package net.serenitybdd.core.webdriver.driverproviders;
 
 import net.serenitybdd.core.buildinfo.DriverCapabilityRecord;
+import net.serenitybdd.core.di.WebDriverInjectors;
 import net.serenitybdd.core.time.InternalSystemClock;
 import net.serenitybdd.core.webdriver.servicepools.DriverServicePool;
 import net.serenitybdd.core.webdriver.servicepools.InternetExplorerServicePool;
@@ -20,12 +21,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static net.thucydides.core.ThucydidesSystemProperty.ACCEPT_INSECURE_CERTIFICATES;
+import static net.thucydides.core.webdriver.SupportedWebDriver.IEXPLORER;
+
 public class InternetExplorerDriverProvider implements DriverProvider {
 
     private final DriverCapabilityRecord driverProperties;
     private static final Logger LOGGER = LoggerFactory.getLogger(InternetExplorerDriverProvider.class);
 
     private final DriverServicePool driverServicePool = new InternetExplorerServicePool();
+    private final EnvironmentVariables environmentVariables;
 
     private DriverServicePool getDriverServicePool() throws IOException {
         driverServicePool.ensureServiceIsRunning();
@@ -36,7 +41,8 @@ public class InternetExplorerDriverProvider implements DriverProvider {
 
     public InternetExplorerDriverProvider(FixtureProviderService fixtureProviderService) {
         this.fixtureProviderService = fixtureProviderService;
-        this.driverProperties = Injectors.getInjector().getInstance(DriverCapabilityRecord.class);
+        this.driverProperties = WebDriverInjectors.getInjector().getInstance(DriverCapabilityRecord.class);
+        this.environmentVariables = Injectors.getInjector().getInstance(EnvironmentVariables.class);
     }
 
     @Override
@@ -46,8 +52,11 @@ public class InternetExplorerDriverProvider implements DriverProvider {
         }
 
         CapabilityEnhancer enhancer = new CapabilityEnhancer(environmentVariables, fixtureProviderService);
-        DesiredCapabilities desiredCapabilities = enhancer.enhanced(recommendedDefaultInternetExplorerCapabilities());
-        driverProperties.registerCapabilities("iexplorer", desiredCapabilities);
+        DesiredCapabilities desiredCapabilities = enhancer.enhanced(recommendedDefaultInternetExplorerCapabilities(), IEXPLORER);
+
+        SetProxyConfiguration.from(environmentVariables).in(desiredCapabilities);
+
+        driverProperties.registerCapabilities("iexplorer", capabilitiesToProperties(desiredCapabilities));
 
         try {
             return retryCreateDriverOnNoSuchSession(desiredCapabilities);
@@ -83,11 +92,18 @@ public class InternetExplorerDriverProvider implements DriverProvider {
 
     private DesiredCapabilities recommendedDefaultInternetExplorerCapabilities() {
         DesiredCapabilities defaults = DesiredCapabilities.internetExplorer();
+
         defaults.setCapability(InternetExplorerDriver.IGNORE_ZOOM_SETTING, true);
         defaults.setCapability(InternetExplorerDriver.NATIVE_EVENTS, false);
         defaults.setCapability(InternetExplorerDriver.REQUIRE_WINDOW_FOCUS, false);
         defaults.setCapability(CapabilityType.TAKES_SCREENSHOT, true);
         defaults.setJavascriptEnabled(true);
+
+        defaults = AddCustomDriverCapabilities.from(environmentVariables).forDriver(IEXPLORER).to(defaults);
+
+        if (ACCEPT_INSECURE_CERTIFICATES.booleanFrom(environmentVariables,false)) {
+            defaults.acceptInsecureCerts();
+        }
         return defaults;
     }
 }
